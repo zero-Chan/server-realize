@@ -1,0 +1,7 @@
+if docker-version >= 1.17.
+
+todo:
+(1) vim /etc/sysctl.conf
+      net.ipv4.ip_forward=1
+
+(2) sysctl docker restart

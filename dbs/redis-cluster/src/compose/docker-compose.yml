@@ -1,0 +1,15 @@
+version: '2'
+
+services:
+  cache-redis-1:
+    image: "zero-chan/redis-cluster:1"
+    container_name: cache-redis-1
+    restart: unless-stopped
+    volumes:
+      - cache-redis-1-volume:/data
+    command: --bind 0.0.0.0 --port 10379
+    network_mode: host
+
+volumes:
+  cache-redis-1-volume:
+

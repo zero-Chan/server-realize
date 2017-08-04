@@ -1,10 +1,9 @@
 package entry
 
 import (
-	"encoding/json"
 	"fmt"
-	"mime/multipart"
 	"net/http"
+	"prot/entry-prot"
 	"strings"
 )
 
@@ -12,8 +11,8 @@ type FileUpload struct {
 	method      string
 	path        string
 	contentType string
-	src         FileUploadSource
-	res         FileUploadResult
+	src         prot.FileUploadSource
+	res         prot.FileUploadResult
 }
 
 func NewFileUpload() *FileUpload {
@@ -21,8 +20,8 @@ func NewFileUpload() *FileUpload {
 		method:      http.MethodPost,
 		path:        "/file/upload",
 		contentType: "multipart/form-data",
-		src:         CreateFileUploadSource(),
-		res:         CreateFileUploadResult(),
+		src:         prot.CreateFileUploadSource(),
+		res:         prot.CreateFileUploadResult(),
 	}
 
 	return entry
@@ -66,71 +65,4 @@ func (this *FileUpload) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-}
-
-type FileUploadSource struct {
-	UserID   string `json:"UserID"`
-	FileName string `json:"FileName"`
-
-	File multipart.File
-}
-
-func CreateFileUploadSource() FileUploadSource {
-	src := FileUploadSource{}
-
-	return src
-}
-
-func (src *FileUploadSource) Get(req *http.Request) error {
-	err := req.ParseMultipartForm(http.DefaultMaxHeaderBytes)
-	if err != nil {
-		return err
-	}
-
-	data := req.FormValue("data")
-
-	err = json.Unmarshal([]byte(data), src)
-	if err != nil {
-		return err
-	}
-
-	switch {
-	case len(src.UserID) == 0:
-		return fmt.Errorf("invalid params: [UserID] is empty. data:%s", data)
-
-	case len(src.FileName) == 0:
-		return fmt.Errorf("invalid params: [FileName] is empty. data:%s", data)
-	}
-
-	src.File, _, err = req.FormFile("file")
-	if err != nil {
-		return fmt.Errorf("read file error: %s", err)
-	}
-
-	return nil
-}
-
-type FileUploadResult struct {
-	FilePath string `json:"FilePath"`
-}
-
-func CreateFileUploadResult() FileUploadResult {
-	res := FileUploadResult{}
-
-	return res
-}
-
-func (res *FileUploadResult) Response(w http.ResponseWriter) error {
-	body := make(map[string]interface{})
-	body["message"] = res
-
-	b, err := json.Marshal(body)
-	if err != nil {
-		return fmt.Errorf("Json Marshal fail: %s", err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Add("Content-Type", "application/json")
-	_, err = w.Write(b)
-	return err
 }
