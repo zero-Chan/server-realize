@@ -2,9 +2,17 @@ package entry
 
 import (
 	"fmt"
+	"io"
 	"net/http"
-	"prot/entry-prot"
+	"os"
 	"strings"
+
+	"gopkg.in/mgo.v2/bson"
+
+	"conf"
+	"prot/entry-prot"
+	proProt "prot/project-prot"
+	"store"
 )
 
 type FileUpload struct {
@@ -56,8 +64,44 @@ func (this *FileUpload) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO
-	fmt.Printf("Source: %+v\n", this.src)
+	fileID := bson.NewObjectId().String()
+	filep, err := os.OpenFile(conf.FilesPath()+"/"+fileID, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = io.Copy(filep, this.src.File)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	filep.Close()
+
+	// 防止资源竞争，不让两个程序操作同一个文件
+	targetFile := conf.FilesPath() + "/" + this.src.FileName
+	err = os.Rename(conf.FilesPath()+"/"+fileID, targetFile)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	this.src.FileName = targetFile
+	this.res.FilePath = targetFile
+
+	// save file info to db
+	storeCtl := store.GlobalStore().GetControllor(proProt.ProjectInfoProt{})
+
+	err = storeCtl.EntityFileStore().SaveFileInfo(&this.src)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	err = this.res.Response(w)
 	if err != nil {

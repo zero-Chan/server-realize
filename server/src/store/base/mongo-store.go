@@ -32,13 +32,6 @@ func (store *MongoStore) Dial(url string) error {
 	return store.session.Ping()
 }
 
-func (store *MongoStore) Copy() *MongoStore {
-	if store.session == nil {
-		return nil
-	}
-
-	s := NewMongoStore()
-	s.session = store.session.Copy()
-
-	return s
+func (store *MongoStore) Session() *mgo.Session {
+	return store.session
 }

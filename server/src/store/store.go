@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"conf"
+	"prot/project-prot"
 	"store/base"
 )
 
@@ -12,8 +13,12 @@ var (
 	defaultStore = CreateStore()
 )
 
+func GlobalStore() *Store {
+	return &defaultStore
+}
+
 type Store struct {
-	Mgo *base.MongoStore
+	MongoServer *base.MongoStore
 }
 
 func init() {
@@ -26,7 +31,7 @@ func init() {
 
 func CreateStore() Store {
 	store := Store{
-		Mgo: base.NewMongoStore(),
+		MongoServer: base.NewMongoStore(),
 	}
 
 	return store
@@ -47,7 +52,7 @@ func (store *Store) mgoUp() error {
 		return fmt.Errorf("Conf.MongoServer never exist.")
 	}
 
-	err := store.Mgo.Dial(conf.String())
+	err := store.MongoServer.Dial(conf.String())
 	if err != nil {
 		return fmt.Errorf("Store.mongoUp fail: %s", err)
 	}
@@ -55,9 +60,13 @@ func (store *Store) mgoUp() error {
 	return nil
 }
 
-func (store *Store) Copy() *Store {
-	news := CreateStore()
-	news.Mgo = store.Mgo.Copy()
+func (store *Store) GetControllor(info prot.ProjectInfoProt) StoreController {
+	ctl := CreateStoreController(StoreControllerConfig{
+		// projectInfo
+		proInfo: &info,
 
-	return &news
+		// Conns
+		MongoServerConn: store.MongoServer.Session(),
+	})
+	return ctl
 }

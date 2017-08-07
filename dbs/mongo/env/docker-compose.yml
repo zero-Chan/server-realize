@@ -10,7 +10,7 @@ services:
       - 127.0.0.1:27017:27017
     volumes:
       - mongo-store:/data
-    command: -auth
+#    command: -auth
     hostname: mongo-137
     restart: unless-stopped
 

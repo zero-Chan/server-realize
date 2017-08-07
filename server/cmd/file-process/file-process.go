@@ -6,6 +6,7 @@ import (
 	"conf"
 	"entry"
 	"router"
+	_ "store"
 )
 
 func main() {

@@ -1,3 +1,9 @@
 {
-	"HttpAddr": "127.0.0.1:8687"
+	"HttpAddr": "127.0.0.1:8687",
+	"FilesPath": "./files",
+	
+	"MongoServer": {
+		"Host": "127.0.0.1",
+		"Port": 27017
+	}
 }

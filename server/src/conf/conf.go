@@ -17,6 +17,7 @@ var (
 type Config struct {
 	HTTPAddr    *string          `json:"HttpAddr"`
 	MongoServer *MongoServerConf `json:"MongoServer"`
+	FilesPath   string           `json:"FilesPath"`
 }
 
 func HTTPAddr() string {
@@ -25,6 +26,10 @@ func HTTPAddr() string {
 	}
 
 	return *defaultConfig.HTTPAddr
+}
+
+func FilesPath() string {
+	return defaultConfig.FilesPath
 }
 
 func MongoServer() (MongoServerConf, bool) {
